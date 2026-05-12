@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Ravelaso.UiPath.Extensions</id>
+    <version>1.0.0</version>
+    <authors>Andres Ravelo (@ravelaso)</authors>
+    <owners>Andres Ravelo</owners>
+    <projectUrl>https://github.com/ravelaso/UiPath.Extensioins</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Extensions classes, methods and useful stuff for UiPath.</description>
+    <tags>uipath;extensions;</tags>
+    <readme>docs\README.md</readme>
+    <icon>images\UI_icon.png</icon>
+    <license type="file">docs\LICENSE.md</license>
+  </metadata>
+  <files>
+    <file src="templates\**\*" target="content" />
+    <file src="UI_icon.png" target="images\" />
+    <file src="LICENSE.md" target="docs\" />
+    <file src="README.md" target="docs\" />
+  </files>
+</package>
