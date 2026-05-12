@@ -14,7 +14,6 @@
     <license type="file">docs\LICENSE.md</license>
   </metadata>
   <files>
-    <file src="templates\**\*" target="content" />
     <file src="UI_icon.png" target="images\" />
     <file src="LICENSE.md" target="docs\" />
     <file src="README.md" target="docs\" />
