@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
@@ -6,5 +6,28 @@
         <Nullable>enable</Nullable>
         <RootNamespace>Ravelaso.UiPath.Extensions</RootNamespace>
     </PropertyGroup>
+
+    <!-- NuGet Package Metadata -->
+    <PropertyGroup>
+        <PackageId>Ravelaso.UiPath.Extensions</PackageId>
+        <Version>1.0.1</Version>
+        <Authors>Andres Ravelo (@ravelaso)</Authors>
+        <Company>Andres Ravelo</Company>
+        <PackageProjectUrl>https://github.com/ravelaso/UiPath.Extensions</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/ravelaso/UiPath.Extensions</RepositoryUrl>
+        <PackageLicenseFile>docs\LICENSE.md</PackageLicenseFile>
+        <PackageIcon>images\UI_icon.png</PackageIcon>
+        <PackageReadmeFile>docs\README.md</PackageReadmeFile>
+        <PackageTags>uipath;extensions</PackageTags>
+        <Description>Extensions classes, methods and useful stuff for UiPath.</Description>
+        <RequireLicenseAcceptance>false</RequireLicenseAcceptance>
+    </PropertyGroup>
+
+    <!-- Files to include in the NuGet package -->
+    <ItemGroup>
+        <None Include="..\UI_icon.png" Pack="true" PackagePath="images\" />
+        <None Include="..\LICENSE.md" Pack="true" PackagePath="docs\" />
+        <None Include="..\README.md" Pack="true" PackagePath="docs\" />
+    </ItemGroup>
 
 </Project>

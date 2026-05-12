@@ -5,32 +5,23 @@ on:
     types:
       - closed
     branches: ["master"]
+
 jobs:
   if_merged:
     if: github.event.pull_request.merged == true || github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - name: Update
-        run: sudo apt update
-
-      - name: Install xmllint & mono
-        run: sudo apt install -y libxml2-utils mono-complete --fix-missing
-
       - uses: actions/checkout@v3
-      
-      - uses: nuget/setup-nuget@v1
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
         with:
-          nuget-version: '6.x'
+          dotnet-version: '8.0.x'
 
-      - name: Get version number from .nuspec
-        id: version
+      - name: Build and Pack
         run: |
-          VERSION=$(xmllint --xpath "string(//package/metadata/version)" Ravelaso.UiPath.Extensions.nuspec)
-          echo "VERSION=$VERSION"
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          dotnet build Ravelaso.UiPath.Extensions/Ravelaso.UiPath.Extensions.csproj --configuration Release
+          dotnet pack Ravelaso.UiPath.Extensions/Ravelaso.UiPath.Extensions.csproj --configuration Release --no-build -o .
 
-      - name: Create package
-        run: nuget pack Ravelaso.UiPath.Extensions.nuspec -version ${{ steps.version.outputs.version }}
-        
       - name: Publish package
-        run: nuget push *.nupkg -Source 'https://api.nuget.org/v3/index.json' -ApiKey ${{secrets.NUGET_API_KEY}}
+        run: dotnet nuget push *.nupkg --source 'https://api.nuget.org/v3/index.json' --api-key ${{secrets.NUGET_API_KEY}}

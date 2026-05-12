@@ -32,7 +32,10 @@ public static class QueueHelper
             if (!table.Columns.Contains(kvp.Key))
                 continue;
 
-            var colType = table.Columns[kvp.Key].DataType;
+            var col = table.Columns[kvp.Key];
+            if (col is null) continue;
+
+            var colType = col.DataType;
 
             row[kvp.Key] = colType == typeof(decimal)
                 ? ToDecimalOrDbNull(kvp.Value, kvp.Key)
