@@ -2,9 +2,27 @@ using System.Data;
 
 namespace Ravelaso.UiPath.Extensions.Excel;
 
-public static class DataTableExtensions
+public static class DtUtils
 {
-    public static DataTable GetOnlyColumns(this DataTable dt, params object[] columns)
+    public static DataTable ImportRows(DataTable target, DataTable source)
+    {
+        var result = target.Clone();
+
+        foreach (DataRow row in source.Rows)
+        {
+            var newRow = result.NewRow();
+            foreach (DataColumn col in result.Columns)
+            {
+                newRow[col.ColumnName] = source.Columns.Contains(col.ColumnName)
+                    ? row[col.ColumnName]
+                    : DBNull.Value;
+            }
+            result.Rows.Add(newRow);
+        }
+
+        return result;
+    }
+    public static DataTable GetOnlyColumns(DataTable dt, params object[] columns)
     {
         var result = new DataTable();
 
