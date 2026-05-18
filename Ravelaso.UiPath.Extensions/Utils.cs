@@ -121,4 +121,16 @@ public static class Utils
         var replace = upper.Replace(" ", string.Empty);
         return replace.ToUpper(); // Return the normalized string
     }
+
+    /// <summary>
+    ///    Returns the current week number based on the ISO 8601 standard.
+    /// </summary>
+    public static int GetWeekNumber()
+    {
+        return CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(
+            DateTime.Now,
+            CalendarWeekRule.FirstFourDayWeek,
+            DayOfWeek.Monday
+            );
+    }
 }
