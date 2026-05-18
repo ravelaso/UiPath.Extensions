@@ -1,4 +1,4 @@
-namespace Ravelaso.UiPath.Extensions.Helpers.Excel;
+namespace Ravelaso.UiPath.Extensions.Excel;
 
 public class ExcelReadOptions
 {

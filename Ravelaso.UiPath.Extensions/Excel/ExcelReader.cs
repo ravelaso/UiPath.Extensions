@@ -1,7 +1,7 @@
 using System.Data;
 using ClosedXML.Excel;
 
-namespace Ravelaso.UiPath.Extensions.Helpers.Excel;
+namespace Ravelaso.UiPath.Extensions.Excel;
 
 public static class ExcelReader
 {
