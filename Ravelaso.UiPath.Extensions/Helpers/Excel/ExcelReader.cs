@@ -1,6 +1,5 @@
 using System.Data;
-using DocumentFormat.OpenXml.Packaging;
-using DocumentFormat.OpenXml.Spreadsheet;
+using ClosedXML.Excel;
 
 namespace Ravelaso.UiPath.Extensions.Helpers.Excel;
 
@@ -15,38 +14,39 @@ public static class ExcelReader
     {
         var dataTable = new DataTable();
 
-        using var document = SpreadsheetDocument.Open(filePath, false);
-        var workbookPart = document.WorkbookPart ?? throw new InvalidOperationException("Invalid Excel file.");
-        var sheet = GetSheet(workbookPart, options.SheetName);
-        var sheetId = sheet.Id?.Value ?? throw new InvalidOperationException("Sheet has no Id.");
-        var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheetId);
-        var sheetData = worksheetPart.Worksheet?.GetFirstChild<SheetData>()
-            ?? throw new InvalidOperationException("Worksheet has no SheetData.");
-
-        var rows = sheetData.Elements<Row>().ToList();
+        using var workbook = new XLWorkbook(filePath);
+        var worksheet = GetWorksheet(workbook, options.SheetName);
+        var rows = worksheet.RowsUsed().ToList();
 
         if (rows.Count == 0)
             return dataTable;
 
-        var firstRow = rows[0];
-        var cellCount = firstRow.Elements<Cell>().Count();
+        var typeInferenceRow = options.UseHeaders && rows.Count > 1 ? rows[1] : rows[0];
+        var headerRow = options.UseHeaders ? rows[0] : null;
 
-        for (int i = 0; i < cellCount; i++)
+        var columnCount = typeInferenceRow.Cells().Count();
+        for (int i = 0; i < columnCount; i++)
         {
-            dataTable.Columns.Add(options.UseHeaders ? GetCellValueAsString(workbookPart, firstRow.Elements<Cell>().ElementAt(i)) : $"Column{i + 1}");
+            var columnName = headerRow != null
+                ? headerRow.Cell(i + 1).GetString()
+                : $"Column{i + 1}";
+
+            var columnType = options.InferTypes
+                ? InferColumnType(typeInferenceRow.Cell(i + 1))
+                : typeof(string);
+
+            dataTable.Columns.Add(columnName, columnType);
         }
 
         var dataStartIndex = options.UseHeaders ? 1 : 0;
-
         for (int rowIndex = dataStartIndex; rowIndex < rows.Count; rowIndex++)
         {
             var row = rows[rowIndex];
             var dataRow = dataTable.NewRow();
 
-            for (int colIndex = 0; colIndex < cellCount; colIndex++)
+            for (int colIndex = 0; colIndex < columnCount; colIndex++)
             {
-                var cell = row.Elements<Cell>().ElementAtOrDefault(colIndex);
-                dataRow[colIndex] = GetCellValue(workbookPart, cell, options.InferTypes);
+                dataRow[colIndex] = GetCellValue(row.Cell(colIndex + 1), dataTable.Columns[colIndex].DataType, options.InferTypes);
             }
 
             dataTable.Rows.Add(dataRow);
@@ -55,77 +55,89 @@ public static class ExcelReader
         return dataTable;
     }
 
-    private static Sheet GetSheet(WorkbookPart workbookPart, string? sheetName)
+    private static IXLWorksheet GetWorksheet(IXLWorkbook workbook, string? sheetName)
     {
-        var workbook = workbookPart.Workbook;
-        var sheetsCollection = workbook?.Sheets;
-        if (sheetsCollection == null)
-            throw new InvalidOperationException("Workbook has no Sheets.");
-
-        var sheets = sheetsCollection.Elements<Sheet>().ToList();
-
         if (sheetName != null)
         {
-            var sheet = sheets.FirstOrDefault(s => s.Name == sheetName);
-            if (sheet == null)
+            var worksheet = workbook.Worksheet(sheetName);
+            if (worksheet == null)
                 throw new ArgumentException($"Sheet '{sheetName}' not found.");
-            return sheet;
+            return worksheet;
         }
 
-        return sheets.First() ?? throw new InvalidOperationException("No sheets found in workbook.");
+        return workbook.Worksheets.First();
     }
 
-    private static string GetCellValueAsString(WorkbookPart workbookPart, Cell? cell)
+    private static Type InferColumnType(IXLCell cell)
     {
-        return GetCellValue(workbookPart, cell, inferTypes: false)?.ToString() ?? string.Empty;
-    }
+        if (cell.DataType == XLDataType.DateTime)
+            return typeof(DateTime);
 
-    private static object? GetCellValue(WorkbookPart workbookPart, Cell? cell, bool inferTypes)
-    {
-        if (cell == null)
-            return inferTypes ? DBNull.Value : string.Empty;
+        if (cell.DataType == XLDataType.Boolean)
+            return typeof(bool);
 
-        var value = cell.InnerText;
-
-        if (cell.DataType == null)
+        if (cell.DataType == XLDataType.Number)
         {
-            if (string.IsNullOrEmpty(value))
-                return inferTypes ? DBNull.Value : string.Empty;
-
-            if (inferTypes && TryParseNumber(value, out var number))
-                return number;
-
-            return inferTypes ? DBNull.Value : value;
+            if (IsDateFormat(cell))
+                return typeof(DateTime);
+            return typeof(double);
         }
 
-        if (cell.DataType == CellValues.SharedString)
-            return GetSharedStringValue(workbookPart, int.Parse(value));
-        if (cell.DataType == CellValues.Boolean)
-            return value == "1";
-        if (cell.DataType == CellValues.Error)
-            return value;
-        return value;
+        if (cell.DataType == XLDataType.Text)
+            return typeof(string);
+
+        if (cell.DataType == XLDataType.Error)
+            return typeof(string);
+
+        return typeof(string);
     }
 
-    private static string GetSharedStringValue(WorkbookPart workbookPart, int index)
+    private static bool IsDateFormat(IXLCell cell)
     {
-        var sharedStringTable = workbookPart.SharedStringTablePart?.SharedStringTable;
-        var sharedStrings = sharedStringTable?.Elements<SharedStringItem>().ToList();
-        return sharedStrings?.ElementAtOrDefault(index)?.InnerText ?? string.Empty;
+        var numberFormatId = cell.Style.NumberFormat.NumberFormatId;
+        return IsDateNumberFormatId(numberFormatId);
     }
 
-    private static bool TryParseNumber(string value, out object result)
+    private static bool IsDateNumberFormatId(int numberFormatId)
     {
-        result = null!;
+        return numberFormatId is
+            14 or 15 or 16 or 17 or 18 or 19 or 20 or 21 or 22 or
+            45 or 46 or 47 or 50 or 51 or 52 or 53 or 54 or 55 or 56
+            or 57 or 58 or 165 or 166 or 167 or 168 or 169 or 170 or 171
+            or 172 or 173 or 174 or 175 or 176 or 177 or 178 or 179 or 180
+            or 181 or 182 or 183 or 184 or 185 or 186 or 187 or 188 or 189
+            or 190 or 191 or 192 or 193 or 194 or 195 or 196 or 197 or 198 or 199;
+    }
 
-        if (double.TryParse(value, out var d))
+    private static object GetCellValue(IXLCell cell, Type columnType, bool inferTypes)
+    {
+        if (cell.IsEmpty())
+            return DBNull.Value;
+
+        if (!inferTypes)
+            return cell.GetString();
+
+        if (columnType == typeof(DateTime))
         {
-            result = d;
-            if (d == Math.Floor(d) && d >= int.MinValue && d <= int.MaxValue)
-                result = (int)d;
-            return true;
+            try
+            {
+                return cell.GetDateTime();
+            }
+            catch
+            {
+                return DBNull.Value;
+            }
         }
 
-        return false;
+        if (columnType == typeof(bool))
+            return cell.GetBoolean();
+
+        if (columnType == typeof(double))
+            return cell.GetDouble();
+
+        if (columnType == typeof(string))
+            return cell.GetString();
+
+        return cell.GetString();
     }
 }
