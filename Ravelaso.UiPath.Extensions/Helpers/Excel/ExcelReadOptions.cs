@@ -1,0 +1,10 @@
+namespace Ravelaso.UiPath.Extensions.Helpers.Excel;
+
+public class ExcelReadOptions
+{
+    public string? SheetName { get; set; }
+
+    public bool UseHeaders { get; set; }
+
+    public bool InferTypes { get; set; } = true;
+}
