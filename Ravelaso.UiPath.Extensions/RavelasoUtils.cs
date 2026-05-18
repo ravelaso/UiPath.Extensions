@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace Ravelaso.UiPath.Extensions;
 
-public static class Utils
+public static class RavelasoUtils
 {
     /// <summary>
     ///     Parses a string that may contain currency symbols, thousand separators,
@@ -63,7 +63,7 @@ public static class Utils
     ///     Tries to parse the supplied date (in EU or US style) and returns it
     ///     as <c>yyyy-MM-dd</c>.
     ///     If parsing fails, the original string is returned unchanged.
-    /// </summary>
+    /// </summary>s
     public static string ParseDate(string dateString)
     {
         // Define possible date formats
