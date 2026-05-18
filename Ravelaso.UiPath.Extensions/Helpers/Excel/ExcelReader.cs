@@ -18,8 +18,10 @@ public static class ExcelReader
         using var document = SpreadsheetDocument.Open(filePath, false);
         var workbookPart = document.WorkbookPart ?? throw new InvalidOperationException("Invalid Excel file.");
         var sheet = GetSheet(workbookPart, options.SheetName);
-        var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!.Value);
-        var sheetData = worksheetPart.Worksheet.SheetData;
+        var sheetId = sheet.Id?.Value ?? throw new InvalidOperationException("Sheet has no Id.");
+        var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheetId);
+        var sheetData = worksheetPart.Worksheet?.GetFirstChild<SheetData>()
+            ?? throw new InvalidOperationException("Worksheet has no SheetData.");
 
         var rows = sheetData.Elements<Row>().ToList();
 
@@ -31,7 +33,7 @@ public static class ExcelReader
 
         for (int i = 0; i < cellCount; i++)
         {
-            dataTable.Columns.Add(options.UseHeaders ? GetCellValueAsString( workbookPart, firstRow.Elements<Cell>().ElementAt(i)) : $"Column{i + 1}");
+            dataTable.Columns.Add(options.UseHeaders ? GetCellValueAsString(workbookPart, firstRow.Elements<Cell>().ElementAt(i)) : $"Column{i + 1}");
         }
 
         var dataStartIndex = options.UseHeaders ? 1 : 0;
@@ -55,7 +57,12 @@ public static class ExcelReader
 
     private static Sheet GetSheet(WorkbookPart workbookPart, string? sheetName)
     {
-        var sheets = workbookPart.Workbook.Sheets.Elements<Sheet>();
+        var workbook = workbookPart.Workbook;
+        var sheetsCollection = workbook?.Sheets;
+        if (sheetsCollection == null)
+            throw new InvalidOperationException("Workbook has no Sheets.");
+
+        var sheets = sheetsCollection.Elements<Sheet>().ToList();
 
         if (sheetName != null)
         {
@@ -91,18 +98,19 @@ public static class ExcelReader
             return inferTypes ? DBNull.Value : value;
         }
 
-        return cell.DataType.Value switch
-        {
-            CellValues.SharedString => GetSharedStringValue(workbookPart, int.Parse(value)),
-            CellValues.Boolean => value == "1",
-            CellValues.Error => value,
-            _ => value
-        };
+        if (cell.DataType == CellValues.SharedString)
+            return GetSharedStringValue(workbookPart, int.Parse(value));
+        if (cell.DataType == CellValues.Boolean)
+            return value == "1";
+        if (cell.DataType == CellValues.Error)
+            return value;
+        return value;
     }
 
     private static string GetSharedStringValue(WorkbookPart workbookPart, int index)
     {
-        var sharedStrings = workbookPart.SharedStringTablePart?.SharedStringTable.Elements<SharedStringItem>().ToList();
+        var sharedStringTable = workbookPart.SharedStringTablePart?.SharedStringTable;
+        var sharedStrings = sharedStringTable?.Elements<SharedStringItem>().ToList();
         return sharedStrings?.ElementAtOrDefault(index)?.InnerText ?? string.Empty;
     }
 
