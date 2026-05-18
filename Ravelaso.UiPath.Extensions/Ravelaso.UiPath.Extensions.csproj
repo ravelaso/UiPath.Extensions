@@ -10,7 +10,7 @@
     <!-- NuGet Package Metadata -->
     <PropertyGroup>
         <PackageId>Ravelaso.UiPath.Extensions</PackageId>
-        <Version>1.0.3</Version>
+        <Version>1.0.4</Version>
         <Authors>Andres Ravelo (@ravelaso)</Authors>
         <Company>Andres Ravelo</Company>
         <PackageProjectUrl>https://github.com/ravelaso/UiPath.Extensions</PackageProjectUrl>
