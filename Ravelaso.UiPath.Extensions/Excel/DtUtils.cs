@@ -34,6 +34,7 @@ public static class DtUtils
                     ? row[col.ColumnName]
                     : DBNull.Value;
             }
+
             result.Rows.Add(newRow);
         }
 
@@ -70,7 +71,8 @@ public static class DtUtils
             if (column is int index)
             {
                 if (index < 0 || index >= dt.Columns.Count)
-                    throw new ArgumentOutOfRangeException(nameof(index), $"Index {index} is out of range. DataTable has {dt.Columns.Count} columns.");
+                    throw new ArgumentOutOfRangeException(nameof(index),
+                        $"Index {index} is out of range. DataTable has {dt.Columns.Count} columns.");
                 result.Columns.Add(dt.Columns[index].ColumnName, dt.Columns[index].DataType);
             }
             else if (column is string columnName)
@@ -82,7 +84,9 @@ public static class DtUtils
             }
             else
             {
-                throw new ArgumentException($"Invalid column specification: {column}. Use int (index) or string (column name).", nameof(columns));
+                throw new ArgumentException(
+                    $"Invalid column specification: {column}. Use int (index) or string (column name).",
+                    nameof(columns));
             }
         }
 
@@ -93,6 +97,7 @@ public static class DtUtils
             {
                 newRow[i] = row[result.Columns[i].ColumnName];
             }
+
             result.Rows.Add(newRow);
         }
 
@@ -113,32 +118,51 @@ public static class DtUtils
     public static DataTable GetDataTable<T>(IEnumerable<T> data)
     {
         var dataTable = new DataTable(typeof(T).Name);
-        var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => p.CanRead)
-            .ToArray();
+        var type = typeof(T);
 
-        // Build columns using Description attribute if present, otherwise use property name
-        foreach (var prop in properties)
+
+        // Support both properties (classes/records) and fields (record structs)
+        var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.CanRead)
+            .Select(p => (
+                Name: p.Name,
+                MemberType: Nullable.GetUnderlyingType(p.PropertyType) ?? p.PropertyType,
+                Description: p.GetCustomAttribute<DescriptionAttribute>()?.Description,
+                GetValue: (Func<T, object?>)(item => p.GetValue(item))
+            ))
+            .ToList();
+
+        var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance)
+            .Select(f => (
+                Name: f.Name,
+                MemberType: Nullable.GetUnderlyingType(f.FieldType) ?? f.FieldType,
+                Description: f.GetCustomAttribute<DescriptionAttribute>()?.Description,
+                GetValue: (Func<T, object?>)(item => f.GetValue(item))
+            ))
+            .ToList();
+
+        var members = properties.Count > 0 ? properties : fields;
+
+        // Build columns using Description attribute if present, otherwise use member name
+        foreach (var member in members)
         {
-            var description = prop.GetCustomAttribute<DescriptionAttribute>()?.Description;
-            var columnName = string.IsNullOrWhiteSpace(description) ? prop.Name : description;
-            dataTable.Columns.Add(columnName, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
+            var columnName = string.IsNullOrWhiteSpace(member.Description) ? member.Name : member.Description;
+            dataTable.Columns.Add(columnName, member.MemberType);
         }
 
         // Populate rows
         foreach (var item in data)
         {
             var row = dataTable.NewRow();
-            foreach (var prop in properties)
+            foreach (var member in members)
             {
-                var description = prop.GetCustomAttribute<DescriptionAttribute>()?.Description;
-                var columnName = string.IsNullOrWhiteSpace(description) ? prop.Name : description;
-                row[columnName] = prop.GetValue(item) ?? DBNull.Value;
+                var columnName = string.IsNullOrWhiteSpace(member.Description) ? member.Name : member.Description;
+                row[columnName] = member.GetValue(item) ?? DBNull.Value;
             }
+
             dataTable.Rows.Add(row);
         }
 
         return dataTable;
     }
-
 }
