@@ -1,4 +1,3 @@
 <Solution>
   <Project Path="Ravelaso.UiPath.Extensions/Ravelaso.UiPath.Extensions.csproj" />
-  <Project Path="TestApp/TestApp.csproj" />
 </Solution>
