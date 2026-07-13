@@ -9,8 +9,8 @@ on:
 
 
 jobs:
-  if_merged:
-    if: github.event.pull_request.merged == true || github.event_name == 'push'
+  # if_merged:
+  #   if: github.event.pull_request.merged == true || github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
