@@ -1,5 +1,7 @@
 using System.Data;
 using ClosedXML.Excel;
+// ReSharper disable UnusedMember.Global
+// ReSharper disable DuplicatedStatements
 
 namespace Ravelaso.UiPath.Extensions.Excel;
 

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.RegularExpressions;
+// ReSharper disable UnusedMember.Global
 
 namespace Ravelaso.UiPath.Extensions;
 

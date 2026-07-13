@@ -1,5 +1,6 @@
 using System.Data;
 using ClosedXML.Excel;
+// ReSharper disable UnusedMember.Global
 
 namespace Ravelaso.UiPath.Extensions.Excel;
 

@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Data;
 using System.Reflection;
+// ReSharper disable UnusedMember.Global
 
 namespace Ravelaso.UiPath.Extensions.Excel;
 
@@ -125,18 +126,18 @@ public static class DtUtils
         var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => p.CanRead)
             .Select(p => (
-                Name: p.Name,
+                p.Name,
                 MemberType: Nullable.GetUnderlyingType(p.PropertyType) ?? p.PropertyType,
-                Description: p.GetCustomAttribute<DescriptionAttribute>()?.Description,
+                p.GetCustomAttribute<DescriptionAttribute>()?.Description,
                 GetValue: (Func<T, object?>)(item => p.GetValue(item))
             ))
             .ToList();
 
         var fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance)
             .Select(f => (
-                Name: f.Name,
+                f.Name,
                 MemberType: Nullable.GetUnderlyingType(f.FieldType) ?? f.FieldType,
-                Description: f.GetCustomAttribute<DescriptionAttribute>()?.Description,
+                f.GetCustomAttribute<DescriptionAttribute>()?.Description,
                 GetValue: (Func<T, object?>)(item => f.GetValue(item))
             ))
             .ToList();

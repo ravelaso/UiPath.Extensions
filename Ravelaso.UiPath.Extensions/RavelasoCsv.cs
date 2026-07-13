@@ -1,5 +1,6 @@
 using System.Data;
 using System.Text;
+// ReSharper disable UnusedMember.Global
 
 namespace Ravelaso.UiPath.Extensions;
 
@@ -135,7 +136,7 @@ public static class RavelasoCsv
     private static string[] ParseCsvLine(string line, char delimiter)
     {
         var fields = new List<string>();
-        var current = new System.Text.StringBuilder();
+        var current = new StringBuilder();
         bool inQuotes = false;
 
         for (int i = 0; i < line.Length; i++)
@@ -181,7 +182,7 @@ public static class RavelasoCsv
         }
 
         fields.Add(current.ToString());
-        return fields.ToArray();
+        return [.. fields];
     }
 
     private static string EscapeField(string value, char delimiter)

@@ -1,5 +1,6 @@
 using System.Data;
 using System.Globalization;
+// ReSharper disable UnusedMember.Global
 
 namespace Ravelaso.UiPath.Extensions;
 
@@ -70,7 +71,7 @@ public static class QueueHelper
 
     private static string ToStringOrEmpty(object value)
     {
-        if (value is null || value == DBNull.Value)
+        if (value == DBNull.Value)
             return string.Empty;
 
         return value.ToString() ?? string.Empty;
@@ -78,7 +79,7 @@ public static class QueueHelper
 
     private static object ToDecimalOrDbNull(object value, string key)
     {
-        if (value is null || value == DBNull.Value)
+        if (value == DBNull.Value)
             return DBNull.Value;
 
         if (value is decimal d) return d;
