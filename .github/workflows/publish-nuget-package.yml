@@ -7,23 +7,22 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
-
 jobs:
   # if_merged:
   #   if: github.event.pull_request.merged == true || github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v3
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '8.0.x'
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: "8.0.x"
 
-      - name: Build and Pack
-        run: |
-          dotnet build Ravelaso.UiPath.Extensions/Ravelaso.UiPath.Extensions.csproj --configuration Release
-          dotnet pack Ravelaso.UiPath.Extensions/Ravelaso.UiPath.Extensions.csproj --configuration Release --no-build -o .
+    - name: Build and Pack
+      run: |
+        dotnet build Ravelaso.UiPath.Extensions/Ravelaso.UiPath.Extensions.csproj --configuration Release
+        dotnet pack Ravelaso.UiPath.Extensions/Ravelaso.UiPath.Extensions.csproj --configuration Release --no-build -o .
 
-      - name: Publish package
-        run: dotnet nuget push *.nupkg --source 'https://api.nuget.org/v3/index.json' --api-key ${{secrets.NUGET_API_KEY}}
+    - name: Publish package
+      run: dotnet nuget push *.nupkg --source 'https://api.nuget.org/v3/index.json' --api-key ${{secrets.NUGET_API_KEY}}
