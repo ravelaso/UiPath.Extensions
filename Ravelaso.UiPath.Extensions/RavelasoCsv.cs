@@ -3,6 +3,9 @@ using System.Text;
 
 namespace Ravelaso.UiPath.Extensions;
 
+/// <summary>
+///     Options for reading CSV files with <see cref="RavelasoCsv"/>.
+/// </summary>
 public class CsvReadOptions
 {
     /// <summary>Whether the first row contains column headers. Defaults to true.</summary>
@@ -15,13 +18,40 @@ public class CsvReadOptions
     public Encoding Encoding { get; set; } = Encoding.UTF8;
 }
 
+/// <summary>
+///     Options for writing CSV files with <see cref="RavelasoCsv"/>.
+/// </summary>
+public class CsvWriteOptions
+{
+    /// <summary>The column delimiter character. Defaults to ','.</summary>
+    public char Delimiter { get; set; } = ',';
+
+    /// <summary>The file encoding. Defaults to UTF-8.</summary>
+    public Encoding Encoding { get; set; } = Encoding.UTF8;
+
+    /// <summary>Whether to write column names as the first row. Defaults to true.</summary>
+    public bool UseHeaders { get; set; } = true;
+}
+
+/// <summary>
+///     Reads and writes CSV files with proper quoted-field handling.
+/// </summary>
 public static class RavelasoCsv
 {
+    /// <summary>
+    ///     Reads a CSV file into a <see cref="DataTable"/> using default options (comma delimiter, UTF-8, with headers).
+    /// </summary>
+    /// <param name="filePath">The path to the CSV file.</param>
     public static DataTable ToDataTable(string filePath)
     {
         return ToDataTable(filePath, new CsvReadOptions());
     }
 
+    /// <summary>
+    ///     Reads a CSV file into a <see cref="DataTable"/> using the specified options.
+    /// </summary>
+    /// <param name="filePath">The path to the CSV file.</param>
+    /// <param name="options">The read options (delimiter, encoding, headers).</param>
     public static DataTable ToDataTable(string filePath, CsvReadOptions options)
     {
         var dataTable = new DataTable();
@@ -59,6 +89,47 @@ public static class RavelasoCsv
         }
 
         return dataTable;
+    }
+
+    /// <summary>
+    ///     Writes a <see cref="DataTable"/> to a CSV file using default options (comma delimiter, UTF-8, with headers).
+    /// </summary>
+    /// <param name="table">The DataTable to write.</param>
+    /// <param name="filePath">The output file path.</param>
+    public static void FromDataTable(DataTable table, string filePath)
+    {
+        FromDataTable(table, filePath, new CsvWriteOptions());
+    }
+
+    /// <summary>
+    ///     Writes a <see cref="DataTable"/> to a CSV file using the specified options.
+    /// </summary>
+    /// <param name="table">The DataTable to write.</param>
+    /// <param name="filePath">The output file path.</param>
+    /// <param name="options">The write options (delimiter, encoding, headers).</param>
+    public static void FromDataTable(DataTable table, string filePath, CsvWriteOptions options)
+    {
+        var lines = new List<string>();
+
+        if (options.UseHeaders)
+        {
+            var header = string.Join(options.Delimiter,
+                table.Columns.Cast<DataColumn>().Select(c => EscapeField(c.ColumnName, options.Delimiter)));
+            lines.Add(header);
+        }
+
+        foreach (DataRow row in table.Rows)
+        {
+            var fields = new List<string>();
+            foreach (var item in row.ItemArray)
+            {
+                var value = item == DBNull.Value || item is null ? string.Empty : item.ToString() ?? string.Empty;
+                fields.Add(EscapeField(value, options.Delimiter));
+            }
+            lines.Add(string.Join(options.Delimiter, fields));
+        }
+
+        File.WriteAllLines(filePath, lines, options.Encoding);
     }
 
     private static string[] ParseCsvLine(string line, char delimiter)
@@ -111,5 +182,13 @@ public static class RavelasoCsv
 
         fields.Add(current.ToString());
         return fields.ToArray();
+    }
+
+    private static string EscapeField(string value, char delimiter)
+    {
+        if (value.Contains(delimiter) || value.Contains('"') || value.Contains('\n'))
+            return $"\"{value.Replace("\"", "\"\"")}\"";
+
+        return value;
     }
 }

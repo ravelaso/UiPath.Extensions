@@ -61,10 +61,12 @@ public static class RavelasoUtils
 
     /// <summary>
     ///     Tries to parse the supplied date (in EU or US style) and returns it
-    ///     as <c>yyyy-MM-dd</c>.
+    ///     in the specified output format (default: <c>M/d/yyyy</c>).
     ///     If parsing fails, the original string is returned unchanged.
-    /// </summary>s
-    public static string ParseDate(string dateString)
+    /// </summary>
+    /// <param name="dateString">The date string to parse.</param>
+    /// <param name="outputFormat">The desired output format (e.g. <c>yyyy-MM-dd</c>). Defaults to <c>M/d/yyyy</c>.</param>
+    public static string ParseDate(string dateString, string outputFormat = "M/d/yyyy")
     {
         // Define possible date formats
         string[] daymonthyear =
@@ -96,13 +98,11 @@ public static class RavelasoUtils
             CultureInfo.InvariantCulture,
             DateTimeStyles.None,
             out var parsedDate)
-            ? // Asks if parsed.
-            parsedDate.ToString("M/d/yyyy") // Then return the date in MM/dd/yyyy format
-            : // Otherwise...
-            DateTime.ParseExact(dateString, monthdayyear,
+            ? parsedDate.ToString(outputFormat)
+            : DateTime.ParseExact(dateString, monthdayyear,
                     CultureInfo.InvariantCulture,
                     DateTimeStyles.None)
-                .ToString("M/d/yyyy")); // Parse the Date as Month/Day/YYYY and return proper string.
+                .ToString(outputFormat));
     }
 
     /// <summary>

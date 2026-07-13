@@ -3,13 +3,25 @@ using ClosedXML.Excel;
 
 namespace Ravelaso.UiPath.Extensions.Excel;
 
+/// <summary>
+///     Reads Excel files into <see cref="DataTable"/> using ClosedXML.
+/// </summary>
 public static class ExcelReader
 {
+    /// <summary>
+    ///     Reads the first sheet of an Excel file into a <see cref="DataTable"/> using default options (headers enabled, type inference enabled).
+    /// </summary>
+    /// <param name="filePath">The path to the Excel file.</param>
     public static DataTable ToDataTable(string filePath)
     {
         return ToDataTable(filePath, new ExcelReadOptions());
     }
 
+    /// <summary>
+    ///     Reads an Excel file into a <see cref="DataTable"/> using the specified options.
+    /// </summary>
+    /// <param name="filePath">The path to the Excel file.</param>
+    /// <param name="options">The read options (sheet name, headers, type inference).</param>
     public static DataTable ToDataTable(string filePath, ExcelReadOptions options)
     {
         var dataTable = new DataTable();
