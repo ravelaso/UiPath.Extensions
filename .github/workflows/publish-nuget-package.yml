@@ -8,15 +8,15 @@ on:
   workflow_dispatch:
 
 jobs:
-  # if_merged:
-  #   if: github.event.pull_request.merged == true || github.event_name == 'push'
   build:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
 
@@ -25,5 +25,11 @@ jobs:
           dotnet build Ravelaso.UiPath.Extensions/Ravelaso.UiPath.Extensions.csproj --configuration Release
           dotnet pack Ravelaso.UiPath.Extensions/Ravelaso.UiPath.Extensions.csproj --configuration Release --no-build -o .
 
+      - name: NuGet login (OIDC)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ravelaso
+
       - name: Publish package
-        run: dotnet nuget push *.nupkg --source 'https://api.nuget.org/v3/index.json' --api-key ${{secrets.NUGET_API_KEY}}
+        run: dotnet nuget push *.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
