@@ -1,9 +1,9 @@
 using System.Globalization;
+using System.Net;
+using System.Security;
 using System.Text.RegularExpressions;
 // ReSharper disable UnusedMember.Global
-
 namespace Ravelaso.UiPath.Extensions;
-
 public static class RavelasoUtils
 {
     /// <summary>
@@ -133,5 +133,13 @@ public static class RavelasoUtils
             CalendarWeekRule.FirstFourDayWeek,
             DayOfWeek.Monday
             );
+    }
+
+    /// <summary>
+    ///    Returns the password from a SecureString. (Plain text)
+    /// </summary>
+    public static string ConvertSecureString(SecureString secureString)
+    {
+       return new NetworkCredential(string.Empty, secureString).Password;
     }
 }

@@ -42,6 +42,14 @@ Returns the current ISO 8601 week number.
 int week = RavelasoUtils.GetWeekNumber(); // e.g. 28
 ```
 
+### ConvertSecureString
+
+Returns the password from a SecureString. (Plain text)
+
+```csharp
+string password = RavelasoUtils.ConvertSecureString(secureString);
+```
+
 ---
 
 ## Excel
